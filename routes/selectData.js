@@ -7,6 +7,7 @@ var iconv = require('iconv-lite');
 var cheerio = require('cheerio');
 var superagent = require('superagent');
 var async = require('async');
+var images = require("images");
 
 var getChannelList = require("./dbHelper").getChannelList;
 var updateChannelStatus = require("./dbHelper").updateChannelStatus;
@@ -37,7 +38,7 @@ var getData = function () {
                 //    searchFuc(everyObj);
                 //    //console.log(listData[0].domObj.descContain);
                 //}
-                searchFuc(listData,0,listLength);
+                searchFuc(listData, 0, listLength);
             });
         }
     });
@@ -120,7 +121,7 @@ var checkEle = function (ele, res, everyObj) {
             params.versionStatus = 1;
         }
 
-        console.log(relVersion,version,params.versionStatus);
+        console.log(relVersion, version, params.versionStatus);
     }
 
     if (ele == "iconImgBox") {
@@ -136,7 +137,7 @@ var checkEle = function (ele, res, everyObj) {
 };
 
 //搜索dom树
-var searchDom = function (html, everyObj,callback) {
+var searchDom = function (html, everyObj, callback) {
     var domObj = JSON.parse(everyObj.domObj);//单个网站匹配的dom树
     var statusParams = {};
     var id = everyObj._id;
@@ -153,7 +154,7 @@ var searchDom = function (html, everyObj,callback) {
         var parEle = seccondObj.par.Ele;
         var parClass = checkClass(seccondObj.par.Class);
         var parId = seccondObj.par.Id == "" ? "" : "#" + seccondObj.par.Id;
-        var parIndex = seccondObj.par.parIndex ;
+        var parIndex = seccondObj.par.parIndex;
 
         var selfEle = seccondObj.self.Ele;
         var selfClass = checkClass(seccondObj.self.Class);
@@ -173,11 +174,11 @@ var searchDom = function (html, everyObj,callback) {
         //console.log("--",s2);
         console.log(selfId);
         //当子元素存在id时则直接取值
-        if(selfId){
+        if (selfId) {
             var resText = $(selfId).text();
             statusParams = checkEle(i, resText, everyObj);
-        }else{
-            if(parClass==""){
+        } else {
+            if (parClass == "") {
                 //console.log(s2.length);
                 $(s2).each(function (index, element) {
                     if (index == parIndex) {
@@ -202,7 +203,7 @@ var searchDom = function (html, everyObj,callback) {
                         });
                     }
                 })
-            }else{
+            } else {
                 console.log(s1);
                 $(s1).each(function (index, element) {
                     var resText = "";
@@ -231,16 +232,28 @@ var searchDom = function (html, everyObj,callback) {
     updateChannelStatus(statusParams, function () {
         updatePageNo++;
         console.log(updatePageNo);
-        callback&&callback();
+        callback && callback();
         if (updatePageNo == listLength) {
 
         }
     });
 };
 
+var comperaImage = function () {
+    images("uploadFile/share.jpg")                     //加载图像文件
+        .size(8)                          //等比缩放图像到400像素宽
+        .save("output.jpg", {               //Save the image to a file,whih quality 50
+            quality: 50                    //保存图片到文件,图片质量为50
+        });
+};
+
 //遍历网页
-var searchFuc = function (obj,i) {
-    if(i>obj.length-1){
+var searchFuc = function (obj, i) {
+    comperaImage();
+    return
+
+
+    if (i > obj.length - 1) {
         return
     }
     var url = obj[i].channelUrl;//网站的地址
@@ -259,9 +272,9 @@ var searchFuc = function (obj,i) {
         if (res) {
             var html = res.text;
             //var $ = cheerio.load(html);
-            searchDom(html, obj[i],function(){
+            searchDom(html, obj[i], function () {
                 i++;
-                searchFuc(obj,i);
+                searchFuc(obj, i);
             });
         } else {
             console.log("抓取错误", url);
